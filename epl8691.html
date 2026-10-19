@@ -398,16 +398,44 @@ document.getElementById('btn-rastrear').onclick = async () => {
 function renderFuentes() {
   const cont = document.getElementById('lista-fuentes');
   cont.innerHTML = '';
+  const clasificaciones = fuentes.clasificaciones || {};
+  
   (fuentes.semilla || []).forEach(s => {
+    const actual = clasificaciones[s] || 'alternativa';
     const div = document.createElement('div');
     div.className = 'fuente-item';
-    div.innerHTML = `<span>${s}</span><button data-url="${s}">Eliminar</button>`;
+    div.style.flexDirection = 'column';
+    div.style.alignItems = 'flex-start';
+    
+    div.innerHTML = `
+      <div style="font-weight:600;margin-bottom:0.5rem;word-break:break-all;">${s}</div>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+        <button class="btn-tipo ${actual === 'oficial' ? 'activo' : ''}" data-url="${s}" data-tipo="oficial" style="background:${actual === 'oficial' ? 'var(--oficial)' : 'var(--bg-card)'};color:${actual === 'oficial' ? '#fff' : 'var(--texto)'}">Oficial</button>
+        <button class="btn-tipo ${actual === 'alternativa' ? 'activo' : ''}" data-url="${s}" data-tipo="alternativa" style="background:${actual === 'alternativa' ? 'var(--rojo)' : 'var(--bg-card)'};color:${actual === 'alternativa' ? '#fff' : 'var(--texto)'}">Alternativa</button>
+        <button class="btn-tipo ${actual === 'internacional' ? 'activo' : ''}" data-url="${s}" data-tipo="internacional" style="background:${actual === 'internacional' ? '#8E24AA' : 'var(--bg-card)'};color:${actual === 'internacional' ? '#fff' : 'var(--texto)'}">Internacional</button>
+        <button class="btn" data-url="${s}" style="background:var(--texto-suave);margin-left:auto;padding:0.2rem 0.5rem;font-size:0.7rem;">🗑️</button>
+      </div>
+    `;
     cont.appendChild(div);
   });
-  cont.querySelectorAll('button[data-url]').forEach(b => {
+
+  // Lógica para cambiar el tipo
+  cont.querySelectorAll('.btn-tipo').forEach(b => {
+    b.onclick = async () => {
+      if (!fuentes.clasificaciones) fuentes.clasificaciones = {};
+      fuentes.clasificaciones[b.dataset.url] = b.dataset.tipo;
+      const ok = await apiPut(`/repos/${REPO}/contents/data/fuentes.json`,
+        JSON.stringify(fuentes, null, 2), 'Clasificar fuente');
+      if (ok) { toast('Clasificación guardada'); renderFuentes(); }
+    };
+  });
+
+  // Lógica para eliminar
+  cont.querySelectorAll('button[data-url].btn').forEach(b => {
     b.onclick = async () => {
       fuentes.semilla = fuentes.semilla.filter(x => x !== b.dataset.url);
       delete fuentes.feeds[b.dataset.url];
+      if (fuentes.clasificaciones) delete fuentes.clasificaciones[b.dataset.url];
       const ok = await apiPut(`/repos/${REPO}/contents/data/fuentes.json`,
         JSON.stringify(fuentes, null, 2), 'Eliminar fuente');
       if (ok) { toast('Fuente eliminada'); renderFuentes(); }
