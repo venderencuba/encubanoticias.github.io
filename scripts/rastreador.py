@@ -103,7 +103,7 @@ def leer_feed(nombre, url):
             noticias.append({
                 "categoria": clasificar(titulo + " " + desc),
                 "fuente": nombre,
-                "fuente_tipo": "oficial" if any(x in nombre.lower() for x in ["cubadebate", "granma", "prensa"]) else "alternativa",
+                "fuente_tipo": clasificaciones.get(nombre, "alternativa"),
                 "titulo": titulo,
                 "resumen": desc,
                 "imagen_url": extraer_imagen(item),
