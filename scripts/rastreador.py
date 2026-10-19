@@ -89,6 +89,7 @@ def cargar_fuentes():
     return [(s, url) for s, url in feeds.items()]
 
 def leer_feed(nombre, url):
+    def leer_feed(nombre, url, clasificaciones):
     noticias = []
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
