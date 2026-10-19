@@ -133,9 +133,16 @@ def main():
             return
 
     fuentes = cargar_fuentes()
-    todas = []
-    for nombre, url in fuentes:
-        todas.extend(leer_feed(nombre, url))
+
+# Cargar clasificaciones manuales
+clasificaciones = {}
+if os.path.exists("data/fuentes.json"):
+    with open("data/fuentes.json", "r", encoding="utf-8") as f:
+        clasificaciones = json.load(f).get("clasificaciones", {})
+
+todas = []
+for nombre, url in fuentes:
+    todas.extend(leer_feed(nombre, url, clasificaciones))
 
     vistos = set()
     unicas = []
