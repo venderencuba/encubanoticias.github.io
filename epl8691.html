@@ -389,10 +389,10 @@ function renderFuentes() {
   const cont = document.getElementById('lista-fuentes');
   cont.innerHTML = '';
   
-  const clasificaciones = fuentes.clasificaciones || {};
+  if (!fuentes.clasificaciones) fuentes.clasificaciones = {};
   
   (fuentes.semilla || []).forEach(s => {
-    const actual = clasificaciones[s] || 'alternativa';
+    const actual = fuentes.clasificaciones[s] || 'alternativa';
     
     // Botones de clasificación
     const btns = `
@@ -416,13 +416,25 @@ function renderFuentes() {
   // Guardar clasificación
   cont.querySelectorAll('.btn-tipo').forEach(b => {
     b.onclick = async () => {
-      if (!fuentes.clasificaciones) fuentes.clasificaciones = {};
       fuentes.clasificaciones[b.dataset.url] = b.dataset.tipo;
       const ok = await apiPut(`/repos/${REPO}/contents/data/fuentes.json`,
         JSON.stringify(fuentes, null, 2), 'Clasificar fuente');
       if (ok) { toast('Guardado'); renderFuentes(); }
     };
   });
+
+  // Eliminar
+  cont.querySelectorAll('.btn-eliminar').forEach(b => {
+    b.onclick = async () => {
+      fuentes.semilla = fuentes.semilla.filter(x => x !== b.dataset.url);
+      delete fuentes.feeds[b.dataset.url];
+      if (fuentes.clasificaciones) delete fuentes.clasificaciones[b.dataset.url];
+      const ok = await apiPut(`/repos/${REPO}/contents/data/fuentes.json`,
+        JSON.stringify(fuentes, null, 2), 'Eliminar fuente');
+      if (ok) { toast('Eliminado'); renderFuentes(); }
+    };
+  });
+}
 
   // Eliminar
   cont.querySelectorAll('.btn-eliminar').forEach(b => {
